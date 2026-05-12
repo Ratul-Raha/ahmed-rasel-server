@@ -31,15 +31,33 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
-      process.env.CLIENT_URL
-    ].filter(Boolean);
+      ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(s => s.trim()) : [])
+    ];
     
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) {
+      return callback(null, true);
     }
+
+    // Exact match
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Hostname suffix match (handles Vercel preview deployments and subdomains)
+    try {
+      const originUrl = new URL(origin);
+      for (const allowed of allowedOrigins) {
+        const allowedUrl = new URL(allowed);
+        if (
+          originUrl.hostname === allowedUrl.hostname ||
+          originUrl.hostname.endsWith('.' + allowedUrl.hostname)
+        ) {
+          return callback(null, true);
+        }
+      }
+    } catch {}
+
+    callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
