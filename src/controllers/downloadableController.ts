@@ -1,6 +1,22 @@
 import { Response } from 'express';
+import { v2 as cloudinary } from 'cloudinary';
 import Downloadable from '../models/Downloadable';
 import { AuthRequest } from '../middleware/auth';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const deleteCloudinaryFile = async (publicId: string) => {
+  if (!publicId) return;
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+  } catch {
+    // ignore if already deleted
+  }
+};
 
 export const createDownloadable = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -26,7 +42,7 @@ export const getDownloadables = async (req: any, res: Response): Promise<void> =
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    const filter: any = { status: 'published' };
+    const filter: any = { status: 'published', tier: 'free' };
 
     const [items, total] = await Promise.all([
       Downloadable.find(filter).sort({ order: -1, createdAt: -1 }).skip(skip).limit(limit),
@@ -89,15 +105,21 @@ export const getAllDownloadablesAdmin = async (req: AuthRequest, res: Response):
 export const updateDownloadable = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+
+    const existing = await Downloadable.findById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Downloadable not found' });
+      return;
+    }
+
+    if (req.body.file && req.body.file !== existing.file && existing.filePublicId) {
+      await deleteCloudinaryFile(existing.filePublicId);
+    }
+
     const downloadable = await Downloadable.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true
     });
-
-    if (!downloadable) {
-      res.status(404).json({ success: false, message: 'Downloadable not found' });
-      return;
-    }
 
     res.json({
       success: true,
@@ -121,6 +143,10 @@ export const deleteDownloadable = async (req: AuthRequest, res: Response): Promi
     if (!downloadable) {
       res.status(404).json({ success: false, message: 'Downloadable not found' });
       return;
+    }
+
+    if (downloadable.filePublicId) {
+      await deleteCloudinaryFile(downloadable.filePublicId);
     }
 
     res.json({

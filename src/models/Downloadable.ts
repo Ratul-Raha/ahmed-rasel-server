@@ -4,7 +4,9 @@ export interface IDownloadable extends Document {
   title: string;
   description: string;
   file: string;
+  filePublicId: string;
   status: 'draft' | 'published';
+  tier: 'free' | 'pro';
   order: number;
   createdAt: Date;
   updatedAt: Date;
@@ -27,10 +29,19 @@ const downloadableSchema = new Schema<IDownloadable>(
       type: String,
       required: [true, 'File is required']
     },
+    filePublicId: {
+      type: String,
+      default: ''
+    },
     status: {
       type: String,
       enum: ['draft', 'published'],
       default: 'draft'
+    },
+    tier: {
+      type: String,
+      enum: ['free', 'pro'],
+      default: 'free'
     },
     order: {
       type: Number,
