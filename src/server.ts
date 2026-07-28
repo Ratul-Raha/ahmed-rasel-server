@@ -10,6 +10,7 @@ import authRoutes from './routes/auth';
 import blogRoutes from './routes/blog';
 import galleryRoutes from './routes/gallery';
 import uploadRoutes from './routes/upload';
+import downloadableRoutes from './routes/downloadable';
 import path from 'path';
 
 dotenv.config();
@@ -88,6 +89,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/downloadables', downloadableRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
