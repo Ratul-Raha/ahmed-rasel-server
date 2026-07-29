@@ -11,6 +11,8 @@ import blogRoutes from './routes/blog';
 import galleryRoutes from './routes/gallery';
 import uploadRoutes from './routes/upload';
 import downloadableRoutes from './routes/downloadable';
+import seminarRoutes from './routes/seminar';
+import leadRoutes from './routes/lead';
 import path from 'path';
 
 dotenv.config();
@@ -91,6 +93,8 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/downloadables', downloadableRoutes);
+app.use('/api/seminars', seminarRoutes);
+app.use('/api/leads', leadRoutes);
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
