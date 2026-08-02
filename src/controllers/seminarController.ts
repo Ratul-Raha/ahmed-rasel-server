@@ -3,6 +3,7 @@ import Seminar from '../models/Seminar';
 import SeminarRegistration from '../models/SeminarRegistration';
 import Lead from '../models/Lead';
 import { AuthRequest } from '../middleware/auth';
+import { sendSeminarConfirmation } from '../utils/email';
 
 export const createSeminar = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -205,6 +206,19 @@ export const registerForSeminar = async (req: any, res: Response): Promise<void>
         registrationCount: 1
       });
     }
+
+    await sendSeminarConfirmation({
+      name,
+      email,
+      seminar: {
+        title: seminar.title,
+        description: seminar.description,
+        url: seminar.url,
+        image: seminar.image,
+        dateTime: seminar.dateTime,
+        tier: seminar.tier
+      }
+    });
 
     res.status(201).json({
       success: true,
